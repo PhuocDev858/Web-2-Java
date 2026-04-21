@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/register").permitAll()
                 .requestMatchers("/api/users/login").permitAll()
                 .requestMatchers("/api/users/health").permitAll()
-                .requestMatchers("GET", "/api/users").permitAll()  // Temp: allow getAllUsers without auth
+         
                 
                 // Tất cả request khác cần authentication
                 .anyRequest().authenticated()
