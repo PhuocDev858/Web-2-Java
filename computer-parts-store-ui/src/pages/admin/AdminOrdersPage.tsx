@@ -2,13 +2,17 @@ import { useEffect, useState } from 'react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { OrderTable } from '@/components/admin/tables/OrderTable'
 import { OrderStatusModal } from '@/components/admin/modals/OrderStatusModal'
+import { OrderDetailModal } from '@/components/admin/modals/OrderDetailModal'
 import { orderService } from '@/services/order.service'
 import type { Order } from '@/types'
 
 export const AdminOrdersPage = () => {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // ✅ 2 modal riêng: 1 xem chi tiết, 1 sửa trạng thái
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
   useEffect(() => {
@@ -19,7 +23,6 @@ export const AdminOrdersPage = () => {
     try {
       setIsLoading(true)
       const response = await orderService.getAll(0, 100)
-      // Handle both paginated response {content: []} and direct array []
       const ordersList = Array.isArray(response) ? response : response.content || []
       setOrders(ordersList)
     } catch (error) {
@@ -29,21 +32,22 @@ export const AdminOrdersPage = () => {
     }
   }
 
+  // ✅ Nút mắt → mở detail modal
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order)
-    setIsModalOpen(true)
+    setIsDetailOpen(true)
   }
 
+  // ✅ Nút bút → mở edit status modal
   const handleEditOrder = (order: Order) => {
     setSelectedOrder(order)
-    setIsModalOpen(true)
+    setIsEditOpen(true)
   }
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (confirm('Are you sure you want to delete this order?')) {
+    if (confirm('Bạn có chắc chắn muốn xoá đơn hàng này?')) {
       try {
-        // Implement delete if API supports it
-        setOrders(orders.filter((o) => o.id !== orderId))
+        setOrders(orders.filter((o) => String(o.id) !== String(orderId)))
       } catch (error) {
         console.error('Failed to delete order:', error)
       }
@@ -54,7 +58,7 @@ export const AdminOrdersPage = () => {
     try {
       await orderService.updateStatus(orderId, status)
       await fetchOrders()
-      setIsModalOpen(false)
+      setIsEditOpen(false)
     } catch (error) {
       console.error('Failed to update order status:', error)
     }
@@ -65,18 +69,20 @@ export const AdminOrdersPage = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
-          <p className="text-gray-600 mt-2">Manage customer orders</p>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý đơn hàng</h1>
+          <p className="text-gray-600 mt-2">
+            Tổng cộng: <span className="font-semibold text-primary-600">{orders.length}</span> đơn hàng
+          </p>
         </div>
 
         {/* Table */}
         {isLoading ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <p className="text-gray-600">Loading orders...</p>
+            <p className="text-gray-600">Đang tải đơn hàng...</p>
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <p className="text-gray-600">No orders found</p>
+            <p className="text-gray-600">Chưa có đơn hàng nào</p>
           </div>
         ) : (
           <OrderTable
@@ -87,11 +93,18 @@ export const AdminOrdersPage = () => {
           />
         )}
 
-        {/* Modal */}
-        <OrderStatusModal
-          isOpen={isModalOpen}
+        {/* ✅ Modal xem chi tiết */}
+        <OrderDetailModal
+          isOpen={isDetailOpen}
           order={selectedOrder}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => setIsDetailOpen(false)}
+        />
+
+        {/* ✅ Modal sửa trạng thái */}
+        <OrderStatusModal
+          isOpen={isEditOpen}
+          order={selectedOrder}
+          onClose={() => setIsEditOpen(false)}
           onSubmit={handleStatusChange}
         />
       </div>

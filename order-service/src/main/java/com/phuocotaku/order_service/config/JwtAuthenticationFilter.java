@@ -17,60 +17,50 @@ import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     @Autowired
     private JwtUtil jwtUtil;
 
+    // ✅ Chỉ để PUBLIC những endpoint thực sự không cần auth
     private static final List<String> PUBLIC_ENDPOINTS = List.of(
-            "/api/health",
-            "/api/orders/create"
+            "/api/orders/health"
     );
 
-   @Override
-protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-        throws ServletException, IOException {
-    
-    String method = request.getMethod();
-    String path = request.getRequestURI();
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
 
-    if (isPublicEndpoint(method, path)) {
-        chain.doFilter(request, response);
-        return;
-    }
+        String path = request.getRequestURI();
 
-    String bearerToken = request.getHeader("Authorization");
-    
-    // ✅ THÊM LOG
-    System.out.println("=== JWT Filter ===");
-    System.out.println("Path: " + path);
-    System.out.println("Authorization header: " + bearerToken);
-    
-    if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-        String token = bearerToken.substring(7);
-        boolean isValid = jwtUtil.validateToken(token);
-        List<String> roles = jwtUtil.extractRoles(token);
-        
-        // ✅ THÊM LOG
-        System.out.println("Token valid: " + isValid);
-        System.out.println("Roles: " + roles);
-        
-        if (isValid) {
-            String userId = jwtUtil.extractUserId(token);
-            List<SimpleGrantedAuthority> authorities = roles.stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                    .collect(Collectors.toList());
-
-            UsernamePasswordAuthenticationToken authentication = 
-                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (isPublicEndpoint(path)) {
+            chain.doFilter(request, response);
+            return;
         }
-    } else {
-        System.out.println("No Bearer token found!");
+
+        String bearerToken = request.getHeader("Authorization");
+
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            String token = bearerToken.substring(7);
+
+            if (jwtUtil.validateToken(token)) {
+                String userId = jwtUtil.extractUserId(token);
+                List<String> roles = jwtUtil.extractRoles(token);
+
+                List<SimpleGrantedAuthority> authorities = roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .collect(Collectors.toList());
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        }
+
+        chain.doFilter(request, response);
     }
 
-    chain.doFilter(request, response);
-}
-    private boolean isPublicEndpoint(String method, String path) {
+    private boolean isPublicEndpoint(String path) {
         return PUBLIC_ENDPOINTS.stream()
-                .anyMatch(endpoint -> path.contains(endpoint));
+                .anyMatch(path::contains);
     }
 }

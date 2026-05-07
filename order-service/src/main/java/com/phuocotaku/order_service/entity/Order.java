@@ -39,6 +39,9 @@ public class Order {
     @Column(nullable = false)
     private String contactPhone;
 
+    @Column(nullable = false)
+    private String paymentMethod = "COD";
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OrderItem> items;
 

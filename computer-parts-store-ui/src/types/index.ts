@@ -35,6 +35,7 @@ export interface Product {
   id?: string | number
   sku?: string
   name: string
+  productName?: string
   description?: string
   brand?: string
   category?: { id: string | number; name: string }
@@ -52,6 +53,11 @@ export interface Product {
   createdAt?: Date | string
   updatedAt?: Date | string
   images?: ProductImage[]
+  featuredImage?: string
+  image?: string
+  discount?: number
+  compatibility?: string
+  warranty?: string
 }
 
 export interface ProductImage {
@@ -70,33 +76,39 @@ export interface ProductFilter {
   rating?: number
 }
 
-// Order types
+// ✅ Order types - khớp với OrderResponse từ backend
 export interface OrderItem {
-  productId: string
+  id?: string | number
+  productId: string | number
   productName: string
   quantity: number
-  price: number
-  discount?: number
+  unitPrice: number   // ← backend trả unitPrice
+  totalPrice?: number
+  price?: number      // ← fallback
 }
 
 export interface Order {
-  id: string
-  userId: string
+  id: string | number
+  userId: string | number
+  orderNumber?: string     // ← backend có field này
   items: OrderItem[]
   totalPrice: number
-  discount?: number
-  finalPrice: number
   status: 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'
   shippingAddress: string
-  paymentMethod: string
-  createdAt: Date
-  updatedAt: Date
+  contactPhone?: string    // ← backend có field này
+  paymentMethod?: string
+  discount?: number
+  finalPrice?: number
+  createdAt: Date | string
+  updatedAt: Date | string
 }
 
 export interface CreateOrderRequest {
+  userId?: number
   items: OrderItem[]
   shippingAddress: string
-  paymentMethod: string
+  contactPhone?: string
+  paymentMethod?: string
 }
 
 // Payment types
@@ -105,7 +117,7 @@ export interface Payment {
   orderId: string
   userId: string
   amount: number
-  method: 'CREDIT_CARD' | 'DEBIT_CARD' | 'PAYPAL' | 'BANK_TRANSFER'
+  method: string
   status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
   transactionId?: string
   createdAt: Date

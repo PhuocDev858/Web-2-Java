@@ -43,15 +43,15 @@ export const CheckoutPage = () => {
       setIsLoading(true)
 
       // ✅ Dùng user.userId đúng field
-      const orderPayload = {
+           const orderPayload = {
         userId: user?.userId ? Number(user.userId) : null,
         shippingAddress: form.shippingAddress,
         contactPhone: form.contactPhone,
         items: items.map((item) => ({
-          productId: item.product.id,
+          productId: Number(item.product.id),          // ✅ ép sang Long
           productName: item.product.name,
           quantity: item.quantity,
-          unitPrice: item.product.price,
+          unitPrice: Math.round(item.product.price),   // ✅ ép sang integer, tránh float
         })),
       }
 
