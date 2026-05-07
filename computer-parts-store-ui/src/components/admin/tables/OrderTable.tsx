@@ -33,22 +33,22 @@ export const OrderTable = ({ orders, onView, onEdit, onDelete }: OrderTableProps
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Order ID
+              Mã đơn hàng
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Customer
+              Khách hàng
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Date
+              Ngày
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Amount
+              Số tiền
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Status
+              Trạng thái
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Actions
+              Thao tác
             </th>
           </tr>
         </thead>
@@ -61,7 +61,7 @@ export const OrderTable = ({ orders, onView, onEdit, onDelete }: OrderTableProps
                 {formatDate(order.createdAt)}
               </td>
               <td className="px-6 py-4 font-semibold text-gray-900">
-                {formatPrice(order.finalPrice)}
+                {formatPrice(order.totalPrice)}
               </td>
               <td className="px-6 py-4">
                 <span
@@ -77,7 +77,7 @@ export const OrderTable = ({ orders, onView, onEdit, onDelete }: OrderTableProps
                   <button
                     onClick={() => onView(order)}
                     className="p-2 hover:bg-blue-100 rounded text-blue-600 transition-colors"
-                    title="View order"
+                    title="Xem đơn hàng"
                   >
                     <Eye size={18} />
                   </button>

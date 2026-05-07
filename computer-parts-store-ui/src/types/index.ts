@@ -22,6 +22,7 @@ export interface RegisterData {
   lastName?: string
   email?: string
   phoneNumber?: string
+  address?: string
 }
 
 export interface AuthResponse {
@@ -31,36 +32,34 @@ export interface AuthResponse {
 
 // Product types
 export interface Product {
-  id: string
+  id?: string | number
+  sku?: string
   name: string
-  productName?: string
-  description: string
-  category: string | { id: string; name: string }
-  categoryId?: string
+  description?: string
+  brand?: string
+  category?: { id: string | number; name: string }
+  categoryId?: string | number
+  categoryName?: string
   price: number
-  discount?: number
-  discountPercentage?: number
-  stock: number
-  stockStatus?: number
-  image?: string
-  featuredImage?: string
-  productImages?: string
-  specifications?: Record<string, string> | string
+  quantity?: number
+  stock?: number
+  specification?: string | Record<string, any>
+  specifications?: string | Record<string, any>
   rating?: number
   reviews?: number
   reviewCount?: number
-  createdAt?: Date
-  updatedAt?: Date
-  // PC Component-specific fields
-  brand?: string
-  warranty?: string
-  compatibility?: string
-  powerConsumption?: string
-  specsDimensions?: string
-  weightKg?: number
-  sku?: string
-  isFeatured?: boolean
-  isBestseller?: boolean
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  images?: ProductImage[]
+}
+
+export interface ProductImage {
+  id?: string | number
+  imageUrl: string
+  displayOrder?: number
+  isPrimary?: boolean
+  createdAt?: Date | string
 }
 
 export interface ProductFilter {

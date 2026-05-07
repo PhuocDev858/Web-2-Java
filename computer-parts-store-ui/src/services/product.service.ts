@@ -45,20 +45,20 @@ export const productService = {
 
   search: async (query: string, page = 0, size = 12): Promise<PaginatedResponse<Product>> => {
     const response = await apiClient.get<PaginatedResponse<Product>>(
-      `/products/search?query=${encodeURIComponent(query)}&page=${page}&size=${size}`
+      `/products/search?name=${encodeURIComponent(query)}&page=${page}&size=${size}`
     )
     return response.data
   },
 
-  getByCategory: async (category: string, page = 0, size = 12): Promise<PaginatedResponse<Product>> => {
+  getByCategory: async (categoryId: string, page = 0, size = 12): Promise<PaginatedResponse<Product>> => {
     const response = await apiClient.get<PaginatedResponse<Product>>(
-      `/products/category/${category}?page=${page}&size=${size}`
+      `/products/category/${categoryId}?page=${page}&size=${size}`
     )
     return response.data
   },
 
-  getCategories: async (): Promise<string[]> => {
-    const response = await apiClient.get<string[]>('/products/categories')
+  getCategories: async (): Promise<any[]> => {
+    const response = await apiClient.get<any[]>('/categories')
     return response.data
   },
 

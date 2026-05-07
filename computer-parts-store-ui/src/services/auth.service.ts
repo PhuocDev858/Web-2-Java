@@ -60,9 +60,10 @@ export const authService = {
       const response = await apiClient.post<any>('/users/register', {
         username: data.userName,
         password: data.userPassword,
-        fullName: data.firstName + ' ' + data.lastName,
+        fullName: (data.firstName || '') + ' ' + (data.lastName || ''),
         email: data.email,
-        phone: data.phoneNumber,
+        phone: data.phoneNumber || '',
+        address: data.address || '',
       })
       
       if (!response.data) {
@@ -94,33 +95,43 @@ export const authService = {
   },
 
   getProfile: async (): Promise<User> => {
-    const response = await apiClient.get<any>('/accounts/profile')
+    const user = authService.getCurrentUser()
+    if (!user || !user.userId) {
+      throw new Error('No user logged in')
+    }
+    const response = await apiClient.get<any>(`/users/${user.userId}`)
     const data = response.data
     return {
-      userId: data.userId,
-      userName: data.userName,
+      userId: data.id,
+      userName: data.username,
       email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      phoneNumber: data.phoneNumber,
-      roleName: data.roleName,
+      firstName: data.fullName,
+      phoneNumber: data.phone,
+      roleName: user.roleName,
     }
   },
 
   updateProfile: async (data: Partial<User>): Promise<User> => {
-    const response = await apiClient.put<any>('/accounts/profile', data)
+    const user = authService.getCurrentUser()
+    if (!user || !user.userId) {
+      throw new Error('No user logged in')
+    }
+    const response = await apiClient.put<any>(`/users/${user.userId}`, {
+      fullName: data.firstName,
+      email: data.email,
+      phone: data.phoneNumber,
+    })
     if (response.data) {
-      const user: User = {
-        userId: response.data.userId,
-        userName: response.data.userName,
+      const updatedUser: User = {
+        userId: response.data.id,
+        userName: response.data.username,
         email: response.data.email,
-        firstName: response.data.firstName,
-        lastName: response.data.lastName,
-        phoneNumber: response.data.phoneNumber,
-        roleName: response.data.roleName,
+        firstName: response.data.fullName,
+        phoneNumber: response.data.phone,
+        roleName: user.roleName,
       }
-      localStorage.setItem('user', JSON.stringify(user))
-      return user
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      return updatedUser
     }
     throw new Error('Update profile failed')
   },

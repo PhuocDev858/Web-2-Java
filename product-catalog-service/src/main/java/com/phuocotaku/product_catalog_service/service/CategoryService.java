@@ -8,15 +8,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
     // Create category
+    @Transactional
     @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse createCategory(CategoryRequest request) {
         if (categoryRepository.findByName(request.getName()).isPresent()) {
@@ -50,6 +53,7 @@ public class CategoryService {
     }
 
     // Update category
+    @Transactional
     @CacheEvict(value = {"categories", "category"}, allEntries = true)
     public CategoryResponse updateCategory(Long id, CategoryRequest request) {
         Category category = categoryRepository.findById(id)
@@ -64,6 +68,7 @@ public class CategoryService {
     }
 
     // Delete category
+    @Transactional
     @CacheEvict(value = {"categories", "category"}, allEntries = true)
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)

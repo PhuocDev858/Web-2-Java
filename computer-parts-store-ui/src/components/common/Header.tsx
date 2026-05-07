@@ -37,11 +37,11 @@ export const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/products" className="text-gray-700 hover:text-primary-600">
-              Products
+              Sản phẩm
             </Link>
             {isAdmin && (
               <Link to="/admin" className="text-gray-700 hover:text-primary-600 font-semibold text-primary-600">
-                Admin Dashboard
+                Bảng điều khiển quản trị
               </Link>
             )}
           </nav>
@@ -80,7 +80,7 @@ export const Header = () => {
                       <p className="font-semibold text-gray-900">{user.firstName} {user.lastName}</p>
                       <p className="text-sm text-gray-600">{user.email}</p>
                       <p className="text-xs mt-1 px-2 py-1 bg-primary-100 text-primary-700 rounded inline-block">
-                        {isAdmin ? '👑 Admin' : '👤 Customer'}
+                        {isAdmin ? 'ỏ Admin' : '🗣️ Khách hàng'}
                       </p>
                     </div>
                     <div className="p-2">
@@ -90,7 +90,7 @@ export const Header = () => {
                           className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
-                          📊 Admin Dashboard
+                          📊 Bảng điều khiển
                         </Link>
                       )}
                       <Link

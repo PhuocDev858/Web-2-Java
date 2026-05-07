@@ -13,9 +13,11 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ProductService {
     @Autowired
     private ProductRepository productRepository;
@@ -24,6 +26,7 @@ public class ProductService {
     private CategoryRepository categoryRepository;
 
     // Create product
+    @Transactional
     @CacheEvict(value = "products", allEntries = true)
     public ProductResponse createProduct(ProductRequest request) {
         if (productRepository.findBySku(request.getSku()).isPresent()) {
@@ -76,6 +79,7 @@ public class ProductService {
     }
 
     // Update product
+    @Transactional
     @CacheEvict(value = {"products", "product"}, allEntries = true)
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product product = productRepository.findById(id)
@@ -103,6 +107,7 @@ public class ProductService {
     }
 
     // Delete product
+    @Transactional
     @CacheEvict(value = {"products", "product"}, allEntries = true)
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
@@ -112,6 +117,7 @@ public class ProductService {
     }
 
     // Update stock
+    @Transactional
     @CacheEvict(value = {"products", "product"}, allEntries = true)
     public void updateStock(Long id, Integer quantity) {
         Product product = productRepository.findById(id)

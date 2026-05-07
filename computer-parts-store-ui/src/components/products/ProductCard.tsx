@@ -42,16 +42,16 @@ export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
               />
             ))}
           </div>
-          <span className="text-gray-600 text-xs ml-2">({product.reviews} reviews)</span>
+          <span className="text-gray-600 text-xs ml-2">({product.reviews} đánh giá)</span>
         </div>
 
         {/* Price */}
         <div className="mb-4">
           <div className="text-xl font-bold text-primary-600">{formatPrice(product.price)}</div>
           {product.stock > 0 ? (
-            <span className="text-xs text-green-600">{product.stock} in stock</span>
+            <span className="text-xs text-green-600">{product.stock} còn hàng</span>
           ) : (
-            <span className="text-xs text-red-600">Out of stock</span>
+            <span className="text-xs text-red-600">Hết hàng</span>
           )}
         </div>
 
@@ -63,7 +63,7 @@ export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
             className="flex-1 bg-primary-600 text-white py-2 rounded hover:bg-primary-700 disabled:bg-gray-400 flex items-center justify-center gap-2 text-sm font-semibold"
           >
             <ShoppingCart size={16} />
-            Add
+            Thêm vào giỏ
           </button>
           <button className="flex-1 border border-gray-300 text-gray-700 py-2 rounded hover:border-primary-600 hover:text-primary-600 flex items-center justify-center">
             <Heart size={16} />

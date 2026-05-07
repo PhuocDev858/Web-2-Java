@@ -16,6 +16,7 @@ import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage'
 import { AdminReportsPage } from '@/pages/admin/AdminReportsPage'
+import { CheckoutPage } from '@/pages/CheckoutPage'
 
 function App() {
   const dispatch = useAppDispatch()

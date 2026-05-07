@@ -34,14 +34,14 @@ export const ProductDetailPage = () => {
   }, [id])
 
   if (isLoading) {
-    return <Loading message="Loading product..." />
+    return <Loading message="Đang tải sản phẩm..." />
   }
 
   if (!product) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-600">Product not found</p>
+          <p className="text-gray-600">Sản phẩm không tìm thấy</p>
         </div>
       </Layout>
     )
@@ -80,14 +80,14 @@ export const ProductDetailPage = () => {
                   />
                 ))}
               </div>
-              <span className="text-gray-600">({product.reviews} reviews)</span>
+              <span className="text-gray-600">({product.reviews} đánh giá)</span>
             </div>
 
             {/* Price */}
             <div className="mb-6">
               <p className="text-4xl font-bold text-primary-600">{formatPrice(product.price)}</p>
               {product.discount && (
-                <p className="text-sm text-red-600 mt-2">Save {product.discount}%</p>
+                <p className="text-sm text-red-600 mt-2">Tiết kiếm {product.discount}%</p>
               )}
             </div>
 
@@ -96,12 +96,16 @@ export const ProductDetailPage = () => {
 
             {/* Specifications */}
             <div className="bg-gray-50 p-6 rounded-lg mb-8">
-              <h3 className="font-semibold text-lg mb-4">Specifications</h3>
+              <h3 className="font-semibold text-lg mb-4">Thông số kỹ thuật</h3>
               <div className="space-y-2">
-                {Object.entries(product.specifications).map(([key, value]) => (
+                {product.specification && Object.entries(
+                  typeof product.specification === 'string'
+                    ? JSON.parse(product.specification)
+                    : product.specification
+                ).map(([key, value]) => (
                   <div key={key} className="flex justify-between text-sm">
                     <span className="text-gray-600">{key}:</span>
-                    <span className="font-semibold">{value}</span>
+                    <span className="font-semibold">{String(value)}</span>
                   </div>
                 ))}
               </div>

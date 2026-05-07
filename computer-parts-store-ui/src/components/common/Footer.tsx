@@ -8,9 +8,9 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* About */}
           <div>
-            <h3 className="font-bold text-white mb-4">About Us</h3>
+            <h3 className="font-bold text-white mb-4">Về chúng tôi</h3>
             <p className="text-sm mb-4">
-              Your trusted source for quality computer components and parts at competitive prices.
+              Nguồn liện khiện máy tính chất lượng đáng tin cậy với giá cạnh tranh.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="hover:text-primary-500">
@@ -27,26 +27,26 @@ export const Footer = () => {
 
           {/* Products */}
           <div>
-            <h3 className="font-bold text-white mb-4">Products</h3>
+            <h3 className="font-bold text-white mb-4">Sản phẩm</h3>
             <ul className="text-sm space-y-2">
               <li>
                 <Link to="/products?category=cpu" className="hover:text-primary-500">
-                  CPUs
+                  CPU
                 </Link>
               </li>
               <li>
                 <Link to="/products?category=gpu" className="hover:text-primary-500">
-                  Graphics Cards
+                  Card đồ họa
                 </Link>
               </li>
               <li>
                 <Link to="/products?category=memory" className="hover:text-primary-500">
-                  Memory
+                  Bộ nhớ
                 </Link>
               </li>
               <li>
                 <Link to="/products?category=storage" className="hover:text-primary-500">
-                  Storage
+                  Lưu trữ
                 </Link>
               </li>
             </ul>
@@ -54,26 +54,26 @@ export const Footer = () => {
 
           {/* Customer Service */}
           <div>
-            <h3 className="font-bold text-white mb-4">Customer Service</h3>
+            <h3 className="font-bold text-white mb-4">Dịch vụ khách hàng</h3>
             <ul className="text-sm space-y-2">
               <li>
                 <a href="#" className="hover:text-primary-500">
-                  Contact Us
+                  Liên hệ
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary-500">
-                  Shipping Info
+                  Thông tin vận chuyển
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary-500">
-                  Returns
+                  Trả hàng
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-primary-500">
-                  FAQ
+                  Câu hỏi thường gặp
                 </a>
               </li>
             </ul>

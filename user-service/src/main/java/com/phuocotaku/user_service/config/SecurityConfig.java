@@ -2,6 +2,7 @@ package com.phuocotaku.user_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,21 +35,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())  // Disable CSRF for API
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // Stateless for JWT
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
+                // Cho phép preflight OPTIONS đi qua
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                 // Public endpoints - không cần authentication
                 .requestMatchers("/api/users/register").permitAll()
                 .requestMatchers("/api/users/login").permitAll()
                 .requestMatchers("/api/users/health").permitAll()
-         
-                
+
                 // Tất cả request khác cần authentication
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)  // Add JWT filter
-            .httpBasic(basic -> {})  // Enable Basic Auth nếu cần
-            .formLogin(form -> form.disable());  // Disable form login cho API
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+            .httpBasic(basic -> {})
+            .formLogin(form -> form.disable());
 
         return http.build();
     }

@@ -29,12 +29,12 @@ export const AdminSidebar = ({ isOpen }: AdminSidebarProps) => {
 
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-    { label: 'Products', icon: Package, href: '/admin/products' },
-    { label: 'Users', icon: Users, href: '/admin/users' },
-    // TODO: Enable these features later
-    // { label: 'Orders', icon: ShoppingCart, href: '/admin/orders' },
-    // { label: 'Payments', icon: CreditCard, href: '/admin/payments' },
-    // { label: 'Reports', icon: BarChart3, href: '/admin/reports' },
+    { label: 'Sản phẩm', icon: Package, href: '/admin/products' },
+    { label: 'Người dùng', icon: Users, href: '/admin/users' },
+   
+    { label: 'Đơn hàng', icon: ShoppingCart, href: '/admin/orders' },
+    { label: 'Thanh toán', icon: CreditCard, href: '/admin/payments' },
+    { label: 'Báo cáo', icon: BarChart3, href: '/admin/reports' },
   ]
 
   const isActive = (href: string) => location.pathname === href

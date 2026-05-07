@@ -65,7 +65,7 @@ export const ProductsPage = () => {
   }
 
   if (isLoading && products.length === 0) {
-    return <Loading message="Loading products..." />
+    return <Loading message="Đang tải sản phẩm..." />
   }
 
   return (
@@ -74,7 +74,7 @@ export const ProductsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Sidebar Filters */}
           <div className="bg-white p-6 rounded-lg shadow-md h-fit">
-            <h3 className="font-bold text-lg mb-4">Filters</h3>
+            <h3 className="font-bold text-lg mb-4">Bộ lọc</h3>
 
             {/* Category Filter */}
             <div className="mb-6">

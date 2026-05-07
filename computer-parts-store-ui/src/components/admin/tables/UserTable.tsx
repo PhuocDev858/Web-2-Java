@@ -13,22 +13,22 @@ export const UserTable = ({ users, onDelete }: UserTableProps) => {
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Name
+              Họ tên
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
               Email
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Username
+              Tên đăng nhập
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Role
+              Vại trò
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Phone
+              Số điện thoại
             </th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-              Actions
+              Thao tác
             </th>
           </tr>
         </thead>
@@ -55,7 +55,7 @@ export const UserTable = ({ users, onDelete }: UserTableProps) => {
                   onClick={() => onDelete(user.id)}
                   className="p-2 hover:bg-red-100 rounded text-red-600 transition-colors"
                   disabled={user.role === 'ADMIN'}
-                  title={user.role === 'ADMIN' ? 'Cannot delete admin' : 'Delete user'}
+                  title={user.role === 'ADMIN' ? 'Không thể xóa admin' : 'Xóa người dùng'}
                 >
                   {user.role === 'ADMIN' ? <ShieldAlert size={18} /> : <Trash2 size={18} />}
                 </button>
