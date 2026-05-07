@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/common/Layout'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
@@ -14,20 +14,34 @@ export const CheckoutPage = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
-  const [form, setForm] = useState({ shippingAddress: '', contactPhone: '' })
+  const [form, setForm] = useState({
+    shippingAddress: '',
+    contactPhone: ''
+  })
+
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Dùng ref để tránh race condition
+  const orderPlacedRef = useRef(false)
+
   const totalWithTax = totalPrice * 1.1
 
-  if (items.length === 0) {
-    navigate('/cart')
-    return null
-  }
+  // Chỉ redirect về cart nếu chưa đặt hàng
+  useEffect(() => {
+    if (!isLoading && items.length === 0 && !orderPlacedRef.current) {
+      navigate('/cart')
+    }
+  }, [items.length, isLoading, navigate])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,54 +56,80 @@ export const CheckoutPage = () => {
     try {
       setIsLoading(true)
 
-      // ✅ Dùng user.userId đúng field
-           const orderPayload = {
+      const orderPayload = {
         userId: user?.userId ? Number(user.userId) : null,
         shippingAddress: form.shippingAddress,
         contactPhone: form.contactPhone,
+        paymentMethod: paymentMethod,
         items: items.map((item) => ({
-          productId: Number(item.product.id),          // ✅ ép sang Long
+          productId: Number(item.product.id),
           productName: item.product.name,
           quantity: item.quantity,
-          unitPrice: Math.round(item.product.price),   // ✅ ép sang integer, tránh float
-        })),
+          unitPrice: Math.round(item.product.price)
+        }))
       }
 
-      // Bước 1: Tạo đơn hàng
-      const orderResponse = await apiClient.post<any>('/orders/create', orderPayload)
-      const orderId = orderResponse.data?.id || orderResponse.data?.orderId
+      // Tạo đơn hàng
+      const orderResponse = await apiClient.post<any>(
+        '/orders/create',
+        orderPayload
+      )
+
+      const orderId =
+        orderResponse.data?.id || orderResponse.data?.orderId
 
       if (!orderId) {
         setError('Không thể tạo đơn hàng, vui lòng thử lại')
         return
       }
 
-      // Bước 2: Xử lý theo phương thức thanh toán
-      if (paymentMethod === 'COD') {
-        // COD: xóa giỏ hàng và chuyển đến trang thành công
-        dispatch(clearCart())
-        navigate(`/order-success?orderId=${orderId}&method=COD`)
+      // Đánh dấu đã đặt hàng ngay lập tức
+      orderPlacedRef.current = true
 
-      } else if (paymentMethod === 'VNPAY') {
-        // VNPay: tạo URL thanh toán
+      // COD
+      if (paymentMethod === 'COD') {
+        // Navigate trước
+        navigate(`/order-success?orderId=${orderId}&method=COD`, {
+          replace: true
+        })
+
+        // Clear cart sau
+        dispatch(clearCart())
+      }
+
+      // VNPAY
+      else if (paymentMethod === 'VNPAY') {
         const vnpayResponse = await apiClient.post<any>(
-          `/payments/create-vnpay?orderId=${orderId}&amount=${Math.round(totalWithTax)}`,
+          `/payments/create-vnpay?orderId=${orderId}&amount=${Math.round(
+            totalWithTax
+          )}`,
           {}
         )
-        const paymentUrl = vnpayResponse.data?.url || vnpayResponse.data?.paymentUrl
+
+        const paymentUrl =
+          vnpayResponse.data?.url ||
+          vnpayResponse.data?.paymentUrl
+
         if (!paymentUrl) {
+          orderPlacedRef.current = false
           setError('Không thể tạo link thanh toán VNPay')
           return
         }
+
         dispatch(clearCart())
         window.location.href = paymentUrl
       }
-
     } catch (err: any) {
       console.error('Checkout error:', err)
-      const msg = typeof err.response?.data === 'string'
-        ? err.response.data
-        : err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại'
+
+      orderPlacedRef.current = false
+
+      const msg =
+        typeof err.response?.data === 'string'
+          ? err.response.data
+          : err.response?.data?.message ||
+            'Có lỗi xảy ra, vui lòng thử lại'
+
       setError(msg)
     } finally {
       setIsLoading(false)
@@ -105,7 +145,9 @@ export const CheckoutPage = () => {
           {/* Form thông tin */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-6">Thông tin giao hàng</h2>
+              <h2 className="text-xl font-bold mb-6">
+                Thông tin giao hàng
+              </h2>
 
               {error && (
                 <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -113,8 +155,10 @@ export const CheckoutPage = () => {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Địa chỉ */}
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-4"
+              >
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Địa chỉ giao hàng *
@@ -130,7 +174,6 @@ export const CheckoutPage = () => {
                   />
                 </div>
 
-                {/* Số điện thoại */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Số điện thoại liên hệ *
@@ -146,11 +189,12 @@ export const CheckoutPage = () => {
                   />
                 </div>
 
-                {/* ✅ Phương thức thanh toán - COD + VNPay */}
+                {/* Phương thức thanh toán */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Phương thức thanh toán *
                   </label>
+
                   <div className="space-y-3">
                     {/* COD */}
                     <label
@@ -168,14 +212,19 @@ export const CheckoutPage = () => {
                         onChange={() => setPaymentMethod('COD')}
                         className="accent-primary-600"
                       />
-                      
+                      <span className="text-2xl">💵</span>
+
                       <div>
-                        <p className="font-semibold text-gray-800">Thanh toán khi nhận hàng (COD)</p>
-                        <p className="text-xs text-gray-500">Trả tiền mặt khi nhận hàng</p>
+                        <p className="font-semibold text-gray-800">
+                          Thanh toán khi nhận hàng (COD)
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Trả tiền mặt khi nhận hàng
+                        </p>
                       </div>
                     </label>
 
-                    {/* VNPay */}
+                    {/* VNPAY */}
                     <label
                       className={`flex items-center gap-3 border-2 rounded-lg px-4 py-3 cursor-pointer transition-colors ${
                         paymentMethod === 'VNPAY'
@@ -191,15 +240,23 @@ export const CheckoutPage = () => {
                         onChange={() => setPaymentMethod('VNPAY')}
                         className="accent-primary-600"
                       />
+
                       <img
                         src="https://vnpay.vn/s1/statics/img/logo2.svg"
                         alt="VNPay"
                         className="h-7"
-                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                        onError={(e) =>
+                          (e.currentTarget.style.display = 'none')
+                        }
                       />
+
                       <div>
-                        <p className="font-semibold text-gray-800">Thanh toán qua VNPay</p>
-                        <p className="text-xs text-gray-500">ATM, Visa, MasterCard, QR Code</p>
+                        <p className="font-semibold text-gray-800">
+                          Thanh toán qua VNPay
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          ATM, Visa, MasterCard, QR Code
+                        </p>
                       </div>
                     </label>
                   </div>
@@ -213,8 +270,8 @@ export const CheckoutPage = () => {
                   {isLoading
                     ? 'Đang xử lý...'
                     : paymentMethod === 'COD'
-                    ? 'Đặt hàng (COD)'
-                    : 'Đặt hàng & Thanh toán VNPay'}
+                    ? '✅ Đặt hàng (COD)'
+                    : '🔒 Đặt hàng & Thanh toán VNPay'}
                 </button>
               </form>
             </div>
@@ -222,16 +279,23 @@ export const CheckoutPage = () => {
 
           {/* Tóm tắt đơn hàng */}
           <div className="bg-white rounded-lg shadow-md p-6 h-fit">
-            <h2 className="text-xl font-bold mb-4">Tóm tắt đơn hàng</h2>
+            <h2 className="text-xl font-bold mb-4">
+              Tóm tắt đơn hàng
+            </h2>
 
             <div className="space-y-3 mb-4">
               {items.map((item) => (
-                <div key={item.product.id} className="flex justify-between text-sm">
+                <div
+                  key={item.product.id}
+                  className="flex justify-between text-sm"
+                >
                   <span className="text-gray-600 truncate max-w-[60%]">
                     {item.product.name} x{item.quantity}
                   </span>
                   <span className="font-semibold">
-                    {formatPrice(item.product.price * item.quantity)}
+                    {formatPrice(
+                      item.product.price * item.quantity
+                    )}
                   </span>
                 </div>
               ))}
@@ -242,23 +306,31 @@ export const CheckoutPage = () => {
                 <span>Tạm tính:</span>
                 <span>{formatPrice(totalPrice)}</span>
               </div>
+
               <div className="flex justify-between">
                 <span>Vận chuyển:</span>
-                <span className="text-green-600">Miễn phí</span>
+                <span className="text-green-600">
+                  Miễn phí
+                </span>
               </div>
+
               <div className="flex justify-between">
                 <span>Thuế (10%):</span>
                 <span>{formatPrice(totalPrice * 0.1)}</span>
               </div>
+
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Tổng cộng:</span>
-                <span className="text-primary-600">{formatPrice(totalWithTax)}</span>
+                <span className="text-primary-600">
+                  {formatPrice(totalWithTax)}
+                </span>
               </div>
             </div>
 
-            {/* Phương thức đang chọn */}
             <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600 text-center">
-              {paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VNPay'}
+              {paymentMethod === 'COD'
+                ? '💵 Thanh toán khi nhận hàng'
+                : '🔒 Thanh toán qua VNPay'}
             </div>
           </div>
         </div>
