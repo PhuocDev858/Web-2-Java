@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Layout } from '@/components/common/Layout'
 import { ProductCard } from '@/components/products/ProductCard'
 import { Loading } from '@/components/common/Loading'
+import { Pagination } from '@/components/common/Pagination'
 import { productService } from '@/services/product.service'
 import { useAppDispatch } from '@/store/hooks'
 import { addToCart } from '@/store/cart.slice'
@@ -13,6 +14,10 @@ export const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(12)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
   const [filter, setFilter] = useState<ProductFilter>({
     category: searchParams.get('category') || undefined,
     search: searchParams.get('search') || undefined,
@@ -25,9 +30,8 @@ export const ProductsPage = () => {
     const fetchCategories = async () => {
       try {
         const data = await productService.getCategories()
-        // ✅ Fix: map lấy tên vì backend trả về CategoryResponse object
         if (Array.isArray(data)) {
-          setCategories(data.map((c: any) => typeof c === 'string' ? c : c.name))
+          setCategories(data.map((c: any) => (typeof c === 'string' ? c : c.name)))
         }
       } catch (error) {
         console.error('Failed to fetch categories:', error)
@@ -40,8 +44,10 @@ export const ProductsPage = () => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true)
-        const response = await productService.getAll(0, 12, filter)
+        const response = await productService.getAll(currentPage, pageSize, filter)
         setProducts(response.content)
+        setTotalPages(response.totalPages)
+        setTotalElements(response.totalElements)
       } catch (error) {
         console.error('Failed to fetch products:', error)
       } finally {
@@ -49,7 +55,7 @@ export const ProductsPage = () => {
       }
     }
     fetchProducts()
-  }, [filter])
+  }, [currentPage, pageSize, filter])
 
   const handleAddToCart = (product: Product) => {
     dispatch(addToCart({ product, quantity: 1 }))
@@ -57,6 +63,7 @@ export const ProductsPage = () => {
 
   const handleFilterChange = (newFilter: ProductFilter) => {
     setFilter(newFilter)
+    setCurrentPage(0) // reset về trang đầu khi đổi filter
     const params = new URLSearchParams()
     if (newFilter.category) params.set('category', newFilter.category)
     if (newFilter.search) params.set('search', newFilter.search)
@@ -66,7 +73,7 @@ export const ProductsPage = () => {
   }
 
   if (isLoading && products.length === 0) {
-    return <Loading message="Đang t��i sản phẩm..." />
+    return <Loading message="Đang tải sản phẩm..." />
   }
 
   return (
@@ -79,7 +86,7 @@ export const ProductsPage = () => {
 
             {/* Category Filter */}
             <div className="mb-6">
-              <h4 className="font-semibold mb-3 text-sm">Category</h4>
+              <h4 className="font-semibold mb-3 text-sm">Danh mục</h4>
               <div className="space-y-2">
                 <label className="flex items-center">
                   <input
@@ -88,7 +95,7 @@ export const ProductsPage = () => {
                     onChange={() => handleFilterChange({ ...filter, category: undefined })}
                     className="mr-2"
                   />
-                  <span className="text-sm">All Categories</span>
+                  <span className="text-sm">Tất cả</span>
                 </label>
                 {categories.map((category) => (
                   <label key={category} className="flex items-center">
@@ -106,11 +113,11 @@ export const ProductsPage = () => {
 
             {/* Price Filter */}
             <div>
-              <h4 className="font-semibold mb-3 text-sm">Price Range</h4>
+              <h4 className="font-semibold mb-3 text-sm">Khoảng giá</h4>
               <div className="space-y-2">
                 <input
                   type="number"
-                  placeholder="Min Price"
+                  placeholder="Giá tối thiểu"
                   value={filter.minPrice || ''}
                   onChange={(e) =>
                     handleFilterChange({
@@ -122,7 +129,7 @@ export const ProductsPage = () => {
                 />
                 <input
                   type="number"
-                  placeholder="Max Price"
+                  placeholder="Giá tối đa"
                   value={filter.maxPrice || ''}
                   onChange={(e) =>
                     handleFilterChange({
@@ -137,8 +144,12 @@ export const ProductsPage = () => {
           </div>
 
           {/* Products Grid */}
-          <div className="md:col-span-3">
-            {products.length === 0 ? (
+          <div className="md:col-span-3 space-y-6">
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Đang tải...</p>
+              </div>
+            ) : products.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg">
                 <p className="text-gray-600">Không tìm thấy sản phẩm</p>
               </div>
@@ -152,6 +163,21 @@ export const ProductsPage = () => {
                   />
                 ))}
               </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalElements={totalElements}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setCurrentPage(0)
+                }}
+              />
             )}
           </div>
         </div>

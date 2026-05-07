@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ProductTable } from '@/components/admin/tables/ProductTable'
 import { ProductFormModal } from '@/components/admin/modals/ProductFormModal'
+import { Pagination } from '@/components/common/Pagination'
 import { productService } from '@/services/product.service'
 import { showSuccess, showError } from '@/utils/toast'
 import { Plus } from 'lucide-react'
@@ -13,16 +14,22 @@ export const AdminProductsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
 
   useEffect(() => {
     fetchProducts()
-  }, [])
+  }, [currentPage, pageSize])
 
   const fetchProducts = async () => {
     try {
       setIsLoading(true)
-      const response = await productService.getAll(0, 100)
+      const response = await productService.getAll(currentPage, pageSize)
       setProducts(response.content)
+      setTotalPages(response.totalPages)
+      setTotalElements(response.totalElements)
     } catch (error) {
       console.error('Failed to fetch products:', error)
     } finally {
@@ -45,6 +52,7 @@ export const AdminProductsPage = () => {
       try {
         await productService.delete(productId)
         showSuccess('Xóa sản phẩm thành công!')
+        await fetchProducts()
       } catch (error) {
         console.error('Failed to delete product:', error)
         const message = error instanceof Error ? error.message : 'Không thể xóa sản phẩm'
@@ -68,7 +76,7 @@ export const AdminProductsPage = () => {
       setSelectedProduct(null)
     } catch (error) {
       console.error('Failed to save product:', error)
-      const message = error instanceof Error ? error.message : 'Không thể lưu sản phẩm'
+      const message = error instanceof Error ? error.message : 'Không th�� lưu sản phẩm'
       showError(`Lỗi: ${message}`)
     } finally {
       setIsSaving(false)
@@ -82,7 +90,9 @@ export const AdminProductsPage = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Quản lý sản phẩm</h1>
-            <p className="text-gray-600 mt-2">Quản lý danh sách linh kiện PC</p>
+            <p className="text-gray-600 mt-2">
+              Tổng cộng: <span className="font-semibold text-primary-600">{totalElements}</span> sản phẩm
+            </p>
           </div>
           <button
             onClick={handleAddProduct}
@@ -99,12 +109,29 @@ export const AdminProductsPage = () => {
             <p className="text-gray-600">Đang tải sản phẩm...</p>
           </div>
         ) : (
-          <ProductTable
-            products={products}
-          isLoading={isSaving}
-            onEdit={handleEditProduct}
-            onDelete={handleDeleteProduct}
-          />
+          <>
+            <ProductTable
+              products={products}
+              isLoading={isSaving}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
+            />
+
+            {/* Pagination */}
+            {totalPages > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalElements={totalElements}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setCurrentPage(0)
+                }}
+              />
+            )}
+          </>
         )}
 
         {/* Modal */}
