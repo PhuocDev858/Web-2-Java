@@ -6,16 +6,16 @@ import { clearCart } from '@/store/cart.slice'
 import { apiClient } from '@/services/api'
 import { formatPrice } from '@/utils/format'
 
+type PaymentMethod = 'COD' | 'VNPAY'
+
 export const CheckoutPage = () => {
   const { items, totalPrice } = useAppSelector((state) => state.cart)
   const { user } = useAppSelector((state) => state.auth)
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
-  const [form, setForm] = useState({
-    shippingAddress: '',
-    contactPhone: '',
-  })
+  const [form, setForm] = useState({ shippingAddress: '', contactPhone: '' })
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -35,16 +35,16 @@ export const CheckoutPage = () => {
     setError('')
 
     if (!form.shippingAddress || !form.contactPhone) {
-      setError('Vui lòng điền đầy đủ thông tin')
+      setError('Vui lòng điền đầy đủ thông tin giao hàng')
       return
     }
 
     try {
       setIsLoading(true)
 
-      // Bước 1: Tạo đơn hàng
+      // ✅ Dùng user.userId đúng field
       const orderPayload = {
-        userId: user?.id,
+        userId: user?.userId ? Number(user.userId) : null,
         shippingAddress: form.shippingAddress,
         contactPhone: form.contactPhone,
         items: items.map((item) => ({
@@ -55,33 +55,42 @@ export const CheckoutPage = () => {
         })),
       }
 
+      // Bước 1: Tạo đơn hàng
       const orderResponse = await apiClient.post<any>('/orders/create', orderPayload)
-      const orderId = orderResponse.data?.id
+      const orderId = orderResponse.data?.id || orderResponse.data?.orderId
 
       if (!orderId) {
         setError('Không thể tạo đơn hàng, vui lòng thử lại')
         return
       }
 
-      // Bước 2: Tạo URL thanh toán VNPay
-      const vnpayResponse = await apiClient.post<any>(
-        `/payments/create-vnpay?orderId=${orderId}&amount=${Math.round(totalWithTax)}`,
-        {}
-      )
+      // Bước 2: Xử lý theo phương thức thanh toán
+      if (paymentMethod === 'COD') {
+        // COD: xóa giỏ hàng và chuyển đến trang thành công
+        dispatch(clearCart())
+        navigate(`/order-success?orderId=${orderId}&method=COD`)
 
-      const paymentUrl = vnpayResponse.data?.url
-      if (!paymentUrl) {
-        setError('Không thể tạo link thanh toán VNPay')
-        return
+      } else if (paymentMethod === 'VNPAY') {
+        // VNPay: tạo URL thanh toán
+        const vnpayResponse = await apiClient.post<any>(
+          `/payments/create-vnpay?orderId=${orderId}&amount=${Math.round(totalWithTax)}`,
+          {}
+        )
+        const paymentUrl = vnpayResponse.data?.url || vnpayResponse.data?.paymentUrl
+        if (!paymentUrl) {
+          setError('Không thể tạo link thanh toán VNPay')
+          return
+        }
+        dispatch(clearCart())
+        window.location.href = paymentUrl
       }
-
-      // Bước 3: Xóa giỏ hàng và redirect sang VNPay
-      dispatch(clearCart())
-      window.location.href = paymentUrl
 
     } catch (err: any) {
       console.error('Checkout error:', err)
-      setError(err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại')
+      const msg = typeof err.response?.data === 'string'
+        ? err.response.data
+        : err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại'
+      setError(msg)
     } finally {
       setIsLoading(false)
     }
@@ -137,28 +146,75 @@ export const CheckoutPage = () => {
                   />
                 </div>
 
-                {/* Phương thức thanh toán */}
+                {/* ✅ Phương thức thanh toán - COD + VNPay */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Phương thức thanh toán
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Phương thức thanh toán *
                   </label>
-                  <div className="flex items-center gap-3 border border-gray-300 rounded px-4 py-3 bg-gray-50">
-                    <img
-                      src="https://vnpay.vn/s1/statics/img/logo2.svg"
-                      alt="VNPay"
-                      className="h-8"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
-                    />
-                    <span className="font-semibold text-gray-700">Thanh toán qua VNPay</span>
+                  <div className="space-y-3">
+                    {/* COD */}
+                    <label
+                      className={`flex items-center gap-3 border-2 rounded-lg px-4 py-3 cursor-pointer transition-colors ${
+                        paymentMethod === 'COD'
+                          ? 'border-primary-600 bg-primary-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="COD"
+                        checked={paymentMethod === 'COD'}
+                        onChange={() => setPaymentMethod('COD')}
+                        className="accent-primary-600"
+                      />
+                      
+                      <div>
+                        <p className="font-semibold text-gray-800">Thanh toán khi nhận hàng (COD)</p>
+                        <p className="text-xs text-gray-500">Trả tiền mặt khi nhận hàng</p>
+                      </div>
+                    </label>
+
+                    {/* VNPay */}
+                    <label
+                      className={`flex items-center gap-3 border-2 rounded-lg px-4 py-3 cursor-pointer transition-colors ${
+                        paymentMethod === 'VNPAY'
+                          ? 'border-primary-600 bg-primary-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="VNPAY"
+                        checked={paymentMethod === 'VNPAY'}
+                        onChange={() => setPaymentMethod('VNPAY')}
+                        className="accent-primary-600"
+                      />
+                      <img
+                        src="https://vnpay.vn/s1/statics/img/logo2.svg"
+                        alt="VNPay"
+                        className="h-7"
+                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                      />
+                      <div>
+                        <p className="font-semibold text-gray-800">Thanh toán qua VNPay</p>
+                        <p className="text-xs text-gray-500">ATM, Visa, MasterCard, QR Code</p>
+                      </div>
+                    </label>
                   </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-primary-600 text-white py-3 rounded font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                 >
-                  {isLoading ? 'Đang xử lý...' : 'Đặt hàng & Thanh toán qua VNPay'}
+                  {isLoading
+                    ? 'Đang xử lý...'
+                    : paymentMethod === 'COD'
+                    ? 'Đặt hàng (COD)'
+                    : 'Đặt hàng & Thanh toán VNPay'}
                 </button>
               </form>
             </div>
@@ -171,7 +227,7 @@ export const CheckoutPage = () => {
             <div className="space-y-3 mb-4">
               {items.map((item) => (
                 <div key={item.product.id} className="flex justify-between text-sm">
-                  <span className="text-gray-600">
+                  <span className="text-gray-600 truncate max-w-[60%]">
                     {item.product.name} x{item.quantity}
                   </span>
                   <span className="font-semibold">
@@ -181,16 +237,16 @@ export const CheckoutPage = () => {
               ))}
             </div>
 
-            <div className="border-t pt-4 space-y-2">
-              <div className="flex justify-between text-sm">
+            <div className="border-t pt-4 space-y-2 text-sm">
+              <div className="flex justify-between">
                 <span>Tạm tính:</span>
                 <span>{formatPrice(totalPrice)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between">
                 <span>Vận chuyển:</span>
                 <span className="text-green-600">Miễn phí</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between">
                 <span>Thuế (10%):</span>
                 <span>{formatPrice(totalPrice * 0.1)}</span>
               </div>
@@ -198,6 +254,11 @@ export const CheckoutPage = () => {
                 <span>Tổng cộng:</span>
                 <span className="text-primary-600">{formatPrice(totalWithTax)}</span>
               </div>
+            </div>
+
+            {/* Phương thức đang chọn */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600 text-center">
+              {paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VNPay'}
             </div>
           </div>
         </div>
