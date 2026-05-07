@@ -19,6 +19,7 @@ export const ProductDetailPage = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return
+
       try {
         setIsLoading(true)
         const data = await productService.getById(id)
@@ -52,6 +53,40 @@ export const ProductDetailPage = () => {
     setQuantity(1)
   }
 
+  // Parse specification an toàn
+  const renderSpecifications = () => {
+    if (!product.specification) {
+      return (
+        <div className="text-gray-500 text-sm">
+          Không có thông số kỹ thuật
+        </div>
+      )
+    }
+
+    try {
+      const specs =
+        typeof product.specification === 'string'
+          ? JSON.parse(product.specification)
+          : product.specification
+
+      return Object.entries(specs).map(([key, value]) => (
+        <div key={key} className="flex justify-between text-sm">
+          <span className="text-gray-600">{key}:</span>
+          <span className="font-semibold">{String(value)}</span>
+        </div>
+      ))
+    } catch (error) {
+      console.error('Specification JSON parse error:', error)
+      console.log('Invalid specification data:', product.specification)
+
+      return (
+        <div className="text-red-500 text-sm">
+          Dữ liệu thông số kỹ thuật không hợp lệ
+        </div>
+      )
+    }
+  }
+
   return (
     <Layout>
       <div className="py-12">
@@ -67,7 +102,10 @@ export const ProductDetailPage = () => {
 
           {/* Product Details */}
           <div>
-            <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
+            {/* Product Name */}
+            <h1 className="text-4xl font-bold mb-4">
+              {product.name}
+            </h1>
 
             {/* Rating */}
             <div className="flex items-center gap-2 mb-6">
@@ -76,47 +114,62 @@ export const ProductDetailPage = () => {
                   <Star
                     key={i}
                     size={20}
-                    className={i < Math.floor(product.rating) ? 'fill-current' : ''}
+                    className={
+                      i < Math.floor(product.rating)
+                        ? 'fill-current'
+                        : ''
+                    }
                   />
                 ))}
               </div>
-              <span className="text-gray-600">({product.reviews} đánh giá)</span>
+              <span className="text-gray-600">
+                ({product.reviews} đánh giá)
+              </span>
             </div>
 
             {/* Price */}
             <div className="mb-6">
-              <p className="text-4xl font-bold text-primary-600">{formatPrice(product.price)}</p>
+              <p className="text-4xl font-bold text-primary-600">
+                {formatPrice(product.price)}
+              </p>
+
               {product.discount && (
-                <p className="text-sm text-red-600 mt-2">Tiết kiếm {product.discount}%</p>
+                <p className="text-sm text-red-600 mt-2">
+                  Tiết kiệm {product.discount}%
+                </p>
               )}
             </div>
 
             {/* Description */}
-            <p className="text-gray-600 mb-8">{product.description}</p>
+            <p className="text-gray-600 mb-8">
+              {product.description}
+            </p>
 
             {/* Specifications */}
             <div className="bg-gray-50 p-6 rounded-lg mb-8">
-              <h3 className="font-semibold text-lg mb-4">Thông số kỹ thuật</h3>
+              <h3 className="font-semibold text-lg mb-4">
+                Thông số kỹ thuật
+              </h3>
+
               <div className="space-y-2">
-                {product.specification && Object.entries(
-                  typeof product.specification === 'string'
-                    ? JSON.parse(product.specification)
-                    : product.specification
-                ).map(([key, value]) => (
-                  <div key={key} className="flex justify-between text-sm">
-                    <span className="text-gray-600">{key}:</span>
-                    <span className="font-semibold">{String(value)}</span>
-                  </div>
-                ))}
+                {renderSpecifications()}
               </div>
             </div>
 
             {/* Stock & Actions */}
             <div className="mb-8">
               <p className="mb-4">
-                Stock:{' '}
-                <span className={product.stock > 0 ? 'text-green-600' : 'text-red-600'}>
-                  {product.stock > 0 ? `${product.stock} available` : 'Out of stock'}
+                Tồn kho:{' '}
+                <span
+                  className={
+                    product.stock > 0
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                  }
+                >
+                  {product.stock > 0
+                    ? `${product.stock} sản phẩm`
+                    : 'Hết hàng'}
                 </span>
               </p>
 
@@ -124,18 +177,29 @@ export const ProductDetailPage = () => {
                 {/* Quantity selector */}
                 <div className="flex items-center border border-gray-300 rounded">
                   <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    onClick={() =>
+                      setQuantity(Math.max(1, quantity - 1))
+                    }
                     disabled={product.stock <= 0}
                     className="px-4 py-2 disabled:opacity-50"
                   >
                     −
                   </button>
+
                   <input
                     type="number"
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) =>
+                      setQuantity(
+                        Math.max(
+                          1,
+                          parseInt(e.target.value) || 1
+                        )
+                      )
+                    }
                     className="w-16 text-center border-l border-r border-gray-300"
                   />
+
                   <button
                     onClick={() => setQuantity(quantity + 1)}
                     disabled={product.stock <= 0}
@@ -152,7 +216,7 @@ export const ProductDetailPage = () => {
                   className="flex-1 bg-primary-600 text-white py-3 rounded font-semibold flex items-center justify-center gap-2 hover:bg-primary-700 disabled:bg-gray-400"
                 >
                   <ShoppingCart size={20} />
-                  Add to Cart
+                  Thêm vào giỏ hàng
                 </button>
 
                 {/* Wishlist */}

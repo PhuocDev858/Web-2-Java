@@ -36,8 +36,8 @@ public class PaymentController {
 
     @PostMapping("/create-vnpay")
     public ResponseEntity<?> createVnPayPayment(@RequestParam("orderId") Long orderId,
-                                                @RequestParam("amount") long amount,
-                                                HttpServletRequest request) {
+            @RequestParam("amount") long amount,
+            HttpServletRequest request) {
         String orderInfo = "Thanh toan don hang " + orderId;
         String paymentUrl = paymentService.createVnPayPaymentUrl(orderId, amount, orderInfo, request);
         Map<String, String> response = new HashMap<>();
@@ -66,7 +66,7 @@ public class PaymentController {
             fields.remove("vnp_SecureHash");
         }
         String signValue = VNPAYConfig.hashAllFields(fields);
-        
+
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
                 // Thanh toán thành công
@@ -74,24 +74,26 @@ public class PaymentController {
                 Long orderId = null;
                 try {
                     orderId = Long.parseLong(txnRef.split("_")[0]);
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
 
                 // Tạo đối tượng payment để lưu DB
                 Payment payment = new Payment();
                 payment.setOrderId(orderId);
                 String amountStr = request.getParameter("vnp_Amount");
-                if(amountStr != null) {
-                   long amount = Long.parseLong(amountStr) / 100;
-                   payment.setAmount(BigDecimal.valueOf(amount));
+                if (amountStr != null) {
+                    long amount = Long.parseLong(amountStr) / 100;
+                    payment.setAmount(BigDecimal.valueOf(amount));
                 }
                 payment.setMethod("VNPAY");
                 payment.setTransactionId(request.getParameter("vnp_TransactionNo"));
                 payment.setBankCode(request.getParameter("vnp_BankCode"));
-                
+
                 paymentService.processPayment(payment);
 
                 return ResponseEntity.status(HttpStatus.FOUND)
-                        .location(URI.create("http://localhost:3000/orders?payment=success&orderId=" + orderId))
+                        .location(URI.create(
+                                "http://localhost:3000/order-success?method=VNPAY&orderId=" + orderId))
                         .build();
             } else {
                 return ResponseEntity.status(HttpStatus.FOUND)
@@ -124,9 +126,10 @@ public class PaymentController {
         String signValue = VNPAYConfig.hashAllFields(fields);
 
         Map<String, String> response = new HashMap<>();
-        
+
         if (signValue.equals(vnp_SecureHash)) {
-            // Check order exists (we just mock success for now as we don't fetch order here)
+            // Check order exists (we just mock success for now as we don't fetch order
+            // here)
             // Check amount matches
             // Check order status
             boolean checkOrderStatus = true; // Replace with real check
@@ -142,20 +145,21 @@ public class PaymentController {
                             Long orderId = null;
                             try {
                                 orderId = Long.parseLong(txnRef.split("_")[0]);
-                            } catch (Exception e) {}
+                            } catch (Exception e) {
+                            }
 
                             // Tạo đối tượng payment để lưu DB (hoặc cập nhật nếu đã có)
                             Payment payment = new Payment();
                             payment.setOrderId(orderId);
                             String amountStr = request.getParameter("vnp_Amount");
-                            if(amountStr != null) {
-                               long amount = Long.parseLong(amountStr) / 100;
-                               payment.setAmount(BigDecimal.valueOf(amount));
+                            if (amountStr != null) {
+                                long amount = Long.parseLong(amountStr) / 100;
+                                payment.setAmount(BigDecimal.valueOf(amount));
                             }
                             payment.setMethod("VNPAY");
                             payment.setTransactionId(request.getParameter("vnp_TransactionNo"));
                             payment.setBankCode(request.getParameter("vnp_BankCode"));
-                            
+
                             paymentService.processPayment(payment);
                         }
                         response.put("RspCode", "00");
