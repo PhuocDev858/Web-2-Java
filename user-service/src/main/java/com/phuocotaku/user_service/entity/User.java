@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -25,6 +27,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(nullable = false)
@@ -44,6 +47,8 @@ public class User {
 
     @Column(nullable = false)
     private Boolean isActive;
+
+    @JsonIgnore
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserRole> userRoles = new HashSet<>();

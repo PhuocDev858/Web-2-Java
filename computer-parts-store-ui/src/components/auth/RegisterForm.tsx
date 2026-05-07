@@ -2,7 +2,15 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 interface RegisterFormProps {
-  onSubmit: (userName: string, userPassword: string, firstName: string, lastName: string, email: string, phoneNumber: string) => Promise<void>
+  onSubmit: (
+    userName: string,
+    userPassword: string,
+    firstName: string,
+    lastName: string,
+    email: string,
+    phoneNumber: string,
+    address: string   // ✅ thêm lại address
+  ) => Promise<void>
   isLoading?: boolean
 }
 
@@ -13,6 +21,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false }: RegisterFormProps)
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [address, setAddress] = useState('') // ✅ thêm state cho address 
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
 
@@ -20,7 +29,7 @@ export const RegisterForm = ({ onSubmit, isLoading = false }: RegisterFormProps)
     e.preventDefault()
     setError('')
 
-    if (!userName || !userPassword || !firstName || !lastName) {
+    if (!userName || !userPassword || !firstName || !lastName || !address || !phoneNumber) { // ✅ kiểm tra address
       setError('Vui lòng điền đầy đủ các trường bắt buộc')
       return
     }
@@ -35,8 +44,13 @@ export const RegisterForm = ({ onSubmit, isLoading = false }: RegisterFormProps)
       return
     }
 
+    if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
+      setError('Số điện thoại không hợp lệ (9-11 chữ số)')
+      return
+    }
+
     try {
-      await onSubmit(userName, userPassword, firstName, lastName, email, phoneNumber)
+      await onSubmit(userName, userPassword, firstName, lastName, email, phoneNumber, address)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng ký thất bại')
     }
@@ -102,6 +116,17 @@ export const RegisterForm = ({ onSubmit, isLoading = false }: RegisterFormProps)
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-primary-600"
               placeholder="0123456789"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Địa Chỉ</label>
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-primary-600"
+              placeholder="Số nhà, đường, quận, thành phố"
             />
           </div>
 
