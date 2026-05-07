@@ -2,6 +2,21 @@ import { jwtDecode } from 'jwt-decode'
 import { apiClient } from './api'
 import type { User, AuthCredentials, RegisterData, AuthResponse } from '@/types'
 
+// ✅ Helper: lấy message từ error của backend (plain string hoặc object)
+const extractErrorMessage = (error: any): string => {
+  if (error.response?.data) {
+    // Backend trả về plain string
+    if (typeof error.response.data === 'string' && error.response.data.length > 0) {
+      return error.response.data
+    }
+    // Backend trả về object có message
+    if (error.response.data.message) {
+      return error.response.data.message
+    }
+  }
+  return error.message || 'Có lỗi xảy ra'
+}
+
 export const authService = {
   login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
     try {
@@ -9,27 +24,21 @@ export const authService = {
         identifier: credentials.userName,
         password: credentials.userPassword,
       })
-      
-      // Handle response
+
       if (!response.data) {
         throw new Error('Đăng nhập thất bại')
       }
-      
-      console.log('Login raw response:', response.data)
-      
-      // Decode JWT to get roles
+
       let roleName = 'CUSTOMER'
       try {
         const decoded: any = jwtDecode(response.data.token)
-        console.log('Decoded JWT:', decoded)
         if (decoded.roles && decoded.roles.length > 0) {
           roleName = decoded.roles[0]
-          console.log('Extracted role from JWT:', roleName)
         }
       } catch (err) {
         console.log('Failed to decode JWT:', err)
       }
-      
+
       const user: User = {
         userId: response.data.userId,
         userName: response.data.username,
@@ -39,44 +48,36 @@ export const authService = {
         phoneNumber: response.data.phone,
         roleName: roleName,
       }
-      
+
       localStorage.setItem('authToken', response.data.token)
       localStorage.setItem('user', JSON.stringify(user))
-      
-      return {
-        token: response.data.token,
-        user: user
-      }
+
+      return { token: response.data.token, user }
     } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
-      }
-      throw error
+      throw new Error(extractErrorMessage(error))
     }
   },
 
-    register: async (data: RegisterData): Promise<AuthResponse> => {
+  register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
       const response = await apiClient.post<any>('/users/register', {
         username: data.userName,
         password: data.userPassword,
-        fullName: data.firstName + ' ' + data.lastName,
+        fullName: (data.firstName || '') + ' ' + (data.lastName || ''),
         email: data.email,
         phone: data.phoneNumber,
-        address: data.address,   // ✅ thêm address
+        address: data.address || '',
       })
 
       if (!response.data) {
         throw new Error('Đăng ký thất bại')
       }
 
-      // After register, auto login
+      // Auto login sau khi đăng ký thành công
       return authService.login(data)
     } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
-      }
-      throw error
+      // ✅ Lấy đúng message từ backend (plain string)
+      throw new Error(extractErrorMessage(error))
     }
   },
 
