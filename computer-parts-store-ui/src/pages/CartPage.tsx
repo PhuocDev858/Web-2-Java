@@ -83,14 +83,14 @@ export const CartPage = () => {
               to="/checkout"
               className="w-full bg-primary-600 text-white py-3 rounded hover:bg-primary-700 font-semibold text-center block"
             >
-              Proceed to Checkout
+              Tạo đơn hàng & Thanh toán
             </Link>
-
+              
             <Link
               to="/products"
               className="w-full border border-gray-300 text-gray-700 py-3 rounded hover:border-primary-600 hover:text-primary-600 font-semibold text-center block mt-3"
             >
-              Continue Shopping
+              Tiếp tục mua sắm
             </Link>
           </div>
         </div>
