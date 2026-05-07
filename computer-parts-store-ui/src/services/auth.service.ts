@@ -55,21 +55,21 @@ export const authService = {
     }
   },
 
-  register: async (data: RegisterData): Promise<AuthResponse> => {
+    register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
       const response = await apiClient.post<any>('/users/register', {
         username: data.userName,
         password: data.userPassword,
-        fullName: (data.firstName || '') + ' ' + (data.lastName || ''),
+        fullName: data.firstName + ' ' + data.lastName,
         email: data.email,
-        phone: data.phoneNumber || '',
-        address: data.address || '',
+        phone: data.phoneNumber,
+        address: data.address,   // ✅ thêm address
       })
-      
+
       if (!response.data) {
         throw new Error('Đăng ký thất bại')
       }
-      
+
       // After register, auto login
       return authService.login(data)
     } catch (error: any) {

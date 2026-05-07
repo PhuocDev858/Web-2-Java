@@ -25,12 +25,14 @@ export const ProductsPage = () => {
     const fetchCategories = async () => {
       try {
         const data = await productService.getCategories()
-        setCategories(data)
+        // ✅ Fix: map lấy tên vì backend trả về CategoryResponse object
+        if (Array.isArray(data)) {
+          setCategories(data.map((c: any) => typeof c === 'string' ? c : c.name))
+        }
       } catch (error) {
         console.error('Failed to fetch categories:', error)
       }
     }
-
     fetchCategories()
   }, [])
 
@@ -46,7 +48,6 @@ export const ProductsPage = () => {
         setIsLoading(false)
       }
     }
-
     fetchProducts()
   }, [filter])
 
@@ -65,7 +66,7 @@ export const ProductsPage = () => {
   }
 
   if (isLoading && products.length === 0) {
-    return <Loading message="Đang tải sản phẩm..." />
+    return <Loading message="Đang t��i sản phẩm..." />
   }
 
   return (
@@ -139,7 +140,7 @@ export const ProductsPage = () => {
           <div className="md:col-span-3">
             {products.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg">
-                <p className="text-gray-600">No products found</p>
+                <p className="text-gray-600">Không tìm thấy sản phẩm</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -1,21 +1,22 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8900/api'
-const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || '30000'
+// ✅ Dùng /api để đi qua Vite proxy → localhost:8900
+// KHÔNG dùng full URL http://localhost:8900/api để tránh CORS
+const API_BASE = '/api'
+const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '30000')
 
 class ApiClient {
   private client: AxiosInstance
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_URL,
-      timeout: parseInt(API_TIMEOUT),
+      baseURL: API_BASE,
+      timeout: API_TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
       },
     })
 
-    // Add request interceptor for auth token
     this.client.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken')
       if (token) {
@@ -24,13 +25,10 @@ class ApiClient {
       return config
     })
 
-    // Add response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        // Only logout on 401 Unauthorized (invalid/expired token)
         if (error.response?.status === 401) {
-          // Don't redirect if we're on login/register page
           const currentPath = window.location.pathname
           if (currentPath !== '/login' && currentPath !== '/register') {
             localStorage.removeItem('authToken')
@@ -38,7 +36,6 @@ class ApiClient {
             window.location.href = '/login'
           }
         }
-        // For other errors (5xx, network errors, etc), just reject without logout
         return Promise.reject(error)
       }
     )

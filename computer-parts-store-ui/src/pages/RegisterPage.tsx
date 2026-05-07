@@ -11,11 +11,27 @@ export const RegisterPage = () => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleRegister = async (userName: string, userPassword: string, firstName: string, lastName: string, email: string, phoneNumber: string) => {
+  const handleRegister = async (
+    userName: string,
+    userPassword: string,
+    firstName: string,
+    lastName: string,
+    email: string,
+    phoneNumber: string,
+    address: string   // ✅ thêm address
+  ) => {
     try {
       setIsLoading(true)
       dispatch(setLoading(true))
-      const response = await authService.register({ userName, userPassword, firstName, lastName, email, phoneNumber })
+      const response = await authService.register({
+        userName,
+        userPassword,
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        address,        // ✅ truyền address
+      })
       dispatch(loginSuccess({ user: response.user, token: response.token }))
       navigate('/')
     } catch (error) {

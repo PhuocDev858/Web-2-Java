@@ -2,40 +2,34 @@ import { apiClient } from './api'
 import type { Product, ProductFilter, PaginatedResponse } from '@/types'
 
 export const productService = {
-  getAll: async (page = 0, size = 12, filter?: ProductFilter): Promise<PaginatedResponse<Product>> => {
+    getAll: async (page = 0, size = 12, filter?: ProductFilter): Promise<PaginatedResponse<Product>> => {
     const params = new URLSearchParams()
     params.append('page', page.toString())
     params.append('size', size.toString())
-
     if (filter?.category) params.append('category', filter.category)
     if (filter?.minPrice !== undefined) params.append('minPrice', filter.minPrice.toString())
     if (filter?.maxPrice !== undefined) params.append('maxPrice', filter.maxPrice.toString())
     if (filter?.search) params.append('search', filter.search)
-    if (filter?.rating !== undefined) params.append('rating', filter.rating.toString())
 
     const response = await apiClient.get<any>(`/products?${params}`)
-    
-    // Handle both formats: PaginatedResponse or direct array
-    if (Array.isArray(response.data)) {
+    const data = response.data
+
+    if (Array.isArray(data)) {
+      return { content: data, totalElements: data.length, totalPages: 1, currentPage: 0, pageSize: size }
+    }
+
+    if (data?.content) {
       return {
-        content: response.data,
-        totalElements: response.data.length,
-        totalPages: 1,
-        currentPage: 0,
-        pageSize: size,
-      }
-    } else if (response.data && response.data.content) {
-      return response.data as PaginatedResponse<Product>
-    } else {
-      // Fallback if response format is unknown
-      return {
-        content: [],
-        totalElements: 0,
-        totalPages: 0,
-        currentPage: 0,
-        pageSize: size,
+        content: data.content,
+        totalElements: data.totalElements ?? 0,
+        totalPages: data.totalPages ?? 1,
+        // ✅ Spring dùng "number" cho page hiện tại, "size" cho page size
+        currentPage: data.number ?? data.currentPage ?? 0,
+        pageSize: data.size ?? data.pageSize ?? size,
       }
     }
+
+    return { content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: size }
   },
 
   getById: async (id: string): Promise<Product> => {
