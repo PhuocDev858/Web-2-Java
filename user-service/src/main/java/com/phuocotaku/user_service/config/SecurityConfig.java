@@ -37,21 +37,28 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // ✅ Tắt HTTP Basic Auth - tránh browser hiện popup Sign in
+            .httpBasic(basic -> basic.disable())
+            .formLogin(form -> form.disable())
             .authorizeHttpRequests(authz -> authz
-                // Cho phép preflight OPTIONS đi qua
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Public endpoints - không cần authentication
+                // Public - không cần đăng nhập
                 .requestMatchers("/api/users/register").permitAll()
                 .requestMatchers("/api/users/login").permitAll()
                 .requestMatchers("/api/users/health").permitAll()
 
-                // Tất cả request khác cần authentication
+                // ✅ Thêm forgot-password endpoints vào whitelist
+                .requestMatchers("/api/users/forgot-password/**").permitAll()
+
+                // Admin only
+                .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
+
+                // Các endpoint khác cần đăng nhập
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-            .httpBasic(basic -> {})
-            .formLogin(form -> form.disable());
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

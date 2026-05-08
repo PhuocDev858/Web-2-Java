@@ -6,6 +6,7 @@ import com.phuocotaku.user_service.dto.LoginResponse;
 import com.phuocotaku.user_service.entity.User;
 import com.phuocotaku.user_service.service.OtpService;
 import com.phuocotaku.user_service.service.UserService;
+import com.phuocotaku.user_service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -147,8 +148,10 @@ public class UserController {
         }
     }
 
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+
+
+    @GetMapping @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<?> getAllUsers() {
         try {
             return ResponseEntity.ok(userService.getAllUsers());
