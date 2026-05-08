@@ -18,33 +18,35 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    // Chỉ ADMIN mới được tạo product
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductRequest request) {
         try {
-            ProductResponse response = productService.createProduct(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(request));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
-    // PUBLIC - Ai cũng xem được danh sách sản phẩm
+    // ✅ Thêm các query param: category (tên), minPrice, maxPrice, search
     @GetMapping
     public ResponseEntity<?> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<ProductResponse> response = productService.getAllProducts(pageable);
+            Page<ProductResponse> response = productService.getFilteredProducts(
+                    category, search, minPrice, maxPrice, pageable);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
-    // PUBLIC - Ai cũng xem được chi tiết sản phẩm
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductById(@PathVariable Long id) {
         try {
@@ -54,7 +56,6 @@ public class ProductController {
         }
     }
 
-    // PUBLIC - Ai cũng xem được sản phẩm theo category
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<?> getProductsByCategory(
             @PathVariable Long categoryId,
@@ -62,14 +63,12 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<ProductResponse> response = productService.getProductsByCategory(categoryId, pageable);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
-    // PUBLIC - Ai cũng tìm kiếm được sản phẩm
     @GetMapping("/search")
     public ResponseEntity<?> searchProducts(
             @RequestParam String name,
@@ -77,26 +76,22 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<ProductResponse> response = productService.searchProducts(name, pageable);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(productService.searchProducts(name, pageable));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
-    // Chỉ ADMIN mới được sửa sản phẩm
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
         try {
-            ProductResponse response = productService.updateProduct(id, request);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(productService.updateProduct(id, request));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
-    // Chỉ ADMIN mới được xóa sản phẩm
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
@@ -108,7 +103,6 @@ public class ProductController {
         }
     }
 
-    // Chỉ ADMIN mới được cập nhật stock
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/stock")
     public ResponseEntity<?> updateStock(@PathVariable Long id, @RequestParam Integer quantity) {

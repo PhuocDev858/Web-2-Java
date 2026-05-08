@@ -11,12 +11,8 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findBySku(String sku);
-    
-    List<Product> findByCategoryId(Long categoryId);
-    
-    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
-    
-    Page<Product> findByCategoryIdAndIsActiveTrue(Long categoryId, Pageable pageable);
-    
     Page<Product> findByIsActiveTrue(Pageable pageable);
+    List<Product> findByIsActiveTrue(); // ✅ thêm để filter in-memory
+    Page<Product> findByCategoryIdAndIsActiveTrue(Long categoryId, Pageable pageable);
+    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

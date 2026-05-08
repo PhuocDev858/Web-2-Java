@@ -146,6 +146,14 @@ public class UserService {
         userRoleRepository.save(userRole);
     }
 
+        // Quên mật khẩu
+    public void resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại!"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     public java.util.List<UserRole> getUserRoles(Long userId) {
         return userRoleRepository.findByUserId(userId);
     }
