@@ -7,6 +7,7 @@ import {
   CreditCard,
   BarChart3,
   LogOut,
+  Tag,
 } from 'lucide-react'
 import { useAppDispatch } from '@/store/hooks'
 import { logout } from '@/store/auth.slice'
@@ -30,8 +31,8 @@ export const AdminSidebar = ({ isOpen }: AdminSidebarProps) => {
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
     { label: 'Sản phẩm', icon: Package, href: '/admin/products' },
+    { label: 'Danh mục', icon: Tag, href: '/admin/categories' },
     { label: 'Người dùng', icon: Users, href: '/admin/users' },
-   
     { label: 'Đơn hàng', icon: ShoppingCart, href: '/admin/orders' },
     { label: 'Thanh toán', icon: CreditCard, href: '/admin/payments' },
     { label: 'Báo cáo', icon: BarChart3, href: '/admin/reports' },
@@ -56,7 +57,7 @@ export const AdminSidebar = ({ isOpen }: AdminSidebarProps) => {
       </div>
 
       {/* Menu Items */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1">
         {menuItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
@@ -78,7 +79,7 @@ export const AdminSidebar = ({ isOpen }: AdminSidebarProps) => {
         })}
       </nav>
 
-      {/* Logout Button */}
+      {/* Logout */}
       <div className="p-4 border-t border-gray-700">
         <button
           onClick={handleLogout}

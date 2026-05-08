@@ -14,6 +14,7 @@ import { CheckoutPage } from '@/pages/CheckoutPage'
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminProductsPage } from '@/pages/admin/AdminProductsPage'
+import { AdminCategoriesPage } from '@/pages/admin/AdminCategoriesPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage'
@@ -63,6 +64,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin/products" element={<ProtectedRoute requiredRole="ADMIN"><AdminProductsPage /></ProtectedRoute>} />
+          <Route path="/admin/categories" element={<ProtectedRoute requiredRole="ADMIN"><AdminCategoriesPage /></ProtectedRoute>} />
           <Route path="/admin/orders" element={<ProtectedRoute requiredRole="ADMIN"><AdminOrdersPage /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute requiredRole="ADMIN"><AdminUsersPage /></ProtectedRoute>} />
           <Route path="/admin/payments" element={<ProtectedRoute requiredRole="ADMIN"><AdminPaymentsPage /></ProtectedRoute>} />
