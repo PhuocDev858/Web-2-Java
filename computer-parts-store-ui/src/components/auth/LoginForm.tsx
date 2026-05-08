@@ -32,7 +32,11 @@ export const LoginForm = ({ onSubmit, isLoading = false }: LoginFormProps) => {
       <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
         <h1 className="text-3xl font-bold mb-6 text-center">Đăng Nhập</h1>
 
-        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -47,7 +51,16 @@ export const LoginForm = ({ onSubmit, isLoading = false }: LoginFormProps) => {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-semibold mb-2">Mật Khẩu</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-gray-700 font-semibold">Mật Khẩu</label>
+              {/* ✅ Đổi từ href="#" sang Link thực sự */}
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
             <input
               type="password"
               value={userPassword}
@@ -60,7 +73,7 @@ export const LoginForm = ({ onSubmit, isLoading = false }: LoginFormProps) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary-600 text-white py-2 rounded font-semibold hover:bg-primary-700 disabled:bg-gray-400"
+            className="w-full bg-primary-600 text-white py-2 rounded font-semibold hover:bg-primary-700 disabled:bg-gray-400 transition-colors"
           >
             {isLoading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
           </button>
@@ -73,12 +86,6 @@ export const LoginForm = ({ onSubmit, isLoading = false }: LoginFormProps) => {
               Đăng ký ngay
             </Link>
           </p>
-        </div>
-
-        <div className="mt-4 text-center">
-          <a href="#" className="text-primary-600 hover:text-primary-700 text-sm">
-            Quên mật khẩu?
-          </a>
         </div>
       </div>
     </div>

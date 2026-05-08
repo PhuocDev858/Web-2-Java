@@ -11,13 +11,14 @@ import { CartPage } from '@/pages/CartPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { CheckoutPage } from '@/pages/CheckoutPage'
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminProductsPage } from '@/pages/admin/AdminProductsPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
-import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage' 
+import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage'
 import { AdminReportsPage } from '@/pages/admin/AdminReportsPage'
-import { OrderSuccessPage } from '@/pages/OrderSuccessPage'   
+import { OrderSuccessPage } from '@/pages/OrderSuccessPage'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -46,8 +47,9 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-          {/* ✅ Checkout - yêu cầu đăng nhập */}
+          {/* Checkout - yêu cầu đăng nhập */}
           <Route
             path="/checkout"
             element={
@@ -65,7 +67,6 @@ function App() {
           <Route path="/admin/users" element={<ProtectedRoute requiredRole="ADMIN"><AdminUsersPage /></ProtectedRoute>} />
           <Route path="/admin/payments" element={<ProtectedRoute requiredRole="ADMIN"><AdminPaymentsPage /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requiredRole="ADMIN"><AdminReportsPage /></ProtectedRoute>} />
-          
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
