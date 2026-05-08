@@ -94,9 +94,10 @@ export const ProductDetailPage = () => {
           {/* Product Image */}
           <div className="flex items-center justify-center bg-gray-200 rounded-lg h-96">
             <img
-              src={product.image}
+              src={product.images?.[0]?.imageUrl ?? product.image ?? '/placeholder-product.png'}
               alt={product.name}
               className="w-full h-full object-cover rounded-lg"
+              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.png' }}
             />
           </div>
 

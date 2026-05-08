@@ -11,15 +11,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -31,36 +27,42 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("Configuring SecurityFilterChain");
-        
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
-                // Cho phép preflight OPTIONS đi qua
+
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Public endpoints - READ ONLY
-                .requestMatchers("GET", "/api/categories/**").permitAll()
-                .requestMatchers("GET", "/api/products/**").permitAll()
-                .requestMatchers("GET", "/api/*/health").permitAll()
-                
-                // Protected endpoints - POST, PUT, DELETE (cần authentication)
-                .requestMatchers("POST", "/api/categories/**").authenticated()
-                .requestMatchers("PUT", "/api/categories/**").authenticated()
-                .requestMatchers("DELETE", "/api/categories/**").authenticated()
-                
-                .requestMatchers("POST", "/api/products/**").authenticated()
-                .requestMatchers("PUT", "/api/products/**").authenticated()
-                .requestMatchers("DELETE", "/api/products/**").authenticated()
-                
+                // Public
+                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
+                .requestMatchers("/images/**").permitAll()
+                .requestMatchers("/api/*/health").permitAll()
+
+                // Categories
+                .requestMatchers(HttpMethod.POST, "/api/categories/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/categories/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/categories/**").authenticated()
+
+                // Products
+                .requestMatchers(HttpMethod.POST, "/api/products/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/products/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/products/**").authenticated()
+
+                // Images
+                .requestMatchers(HttpMethod.POST, "/api/images/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/images/**").authenticated()
+
                 .anyRequest().authenticated()
             )
             .httpBasic(basic -> basic.disable());
 
-        // Add JWT filter BEFORE UsernamePasswordAuthenticationFilter
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(
+            jwtAuthenticationFilter,
+            UsernamePasswordAuthenticationFilter.class
+        );
 
-        logger.info("SecurityFilterChain configured successfully");
         return http.build();
     }
 }

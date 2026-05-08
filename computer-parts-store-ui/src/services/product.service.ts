@@ -3,15 +3,13 @@ import type { Product, ProductFilter, PaginatedResponse } from '@/types'
 
 export const productService = {
     getAll: async (page = 0, size = 12, filter?: ProductFilter): Promise<PaginatedResponse<Product>> => {
-    const params = new URLSearchParams()
-    params.append('page', page.toString())
-    params.append('size', size.toString())
-    if (filter?.category) params.append('category', filter.category)
-    if (filter?.minPrice !== undefined) params.append('minPrice', filter.minPrice.toString())
-    if (filter?.maxPrice !== undefined) params.append('maxPrice', filter.maxPrice.toString())
-    if (filter?.search) params.append('search', filter.search)
+    const params: any = { page, size }
+    if (filter?.category) params.category = filter.category
+    if (filter?.minPrice !== undefined) params.minPrice = filter.minPrice
+    if (filter?.maxPrice !== undefined) params.maxPrice = filter.maxPrice
+    if (filter?.search) params.search = filter.search
 
-    const response = await apiClient.get<any>(`/products?${params}`)
+    const response = await apiClient.get<any>('/products', { params })
     const data = response.data
 
     if (Array.isArray(data)) {

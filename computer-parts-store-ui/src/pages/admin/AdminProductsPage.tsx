@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ProductTable } from '@/components/admin/tables/ProductTable'
 import { ProductFormModal } from '@/components/admin/modals/ProductFormModal'
@@ -7,6 +7,7 @@ import { productService } from '@/services/product.service'
 import { showSuccess, showError } from '@/utils/toast'
 import { Plus } from 'lucide-react'
 import type { Product } from '@/types'
+import type { ImageUploaderHandle } from '@/components/common/ImageUploader'
 
 export const AdminProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([])
@@ -61,22 +62,43 @@ export const AdminProductsPage = () => {
     }
   }
 
-  const handleSubmit = async (formData: Partial<Product>) => {
+  const handleSubmitWithFiles = async (
+    formData: Partial<Product>,
+    imageUploaderRef: React.RefObject<ImageUploaderHandle>
+  ) => {
     try {
       setIsSaving(true)
+      let productId: number | string
+
+      // 1. Create or update product
       if (selectedProduct?.id) {
         await productService.update(selectedProduct.id, formData)
+        productId = selectedProduct.id
         showSuccess('Cập nhật sản phẩm thành công!')
       } else {
-        await productService.create(formData)
+        const newProduct = await productService.create(formData)
+        productId = newProduct.id
         showSuccess('Thêm sản phẩm thành công!')
       }
+
+      // 2. Upload pending images if any
+      const pendingFiles = imageUploaderRef.current?.getPendingFiles() ?? []
+      if (pendingFiles.length > 0) {
+        try {
+          await imageUploaderRef.current?.uploadFiles(productId)
+          showSuccess(`Đã upload ${pendingFiles.length} ảnh thành công!`)
+        } catch (err) {
+          console.error('Failed to upload images:', err)
+          showError('Lỗi khi upload ảnh, nhưng sản phẩm đã được lưu')
+        }
+      }
+
       await fetchProducts()
       setIsModalOpen(false)
       setSelectedProduct(null)
     } catch (error) {
       console.error('Failed to save product:', error)
-      const message = error instanceof Error ? error.message : 'Không th�� lưu sản phẩm'
+      const message = error instanceof Error ? error.message : 'Không thể lưu sản phẩm'
       showError(`Lỗi: ${message}`)
     } finally {
       setIsSaving(false)
@@ -139,7 +161,7 @@ export const AdminProductsPage = () => {
           isOpen={isModalOpen}
           product={selectedProduct}
           onClose={() => setIsModalOpen(false)}
-          onSubmit={handleSubmit}
+          onSubmitWithFiles={handleSubmitWithFiles}
         />
       </div>
     </AdminLayout>

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,7 @@ public class ProductService {
     }
 
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
-        return productRepository.findByIsActiveTrue(pageable).map(this::mapToResponse);
+        return productRepository.findByIsActiveTrueWithJoinPaging(pageable).map(this::mapToResponse);
     }
 
     // ✅ Method mới: filter theo category name, search, minPrice, maxPrice
@@ -56,9 +57,8 @@ public class ProductService {
             String categoryName, String search,
             Double minPrice, Double maxPrice, Pageable pageable) {
 
-        // Lấy tất cả active products rồi filter in-memory
-        // (đơn giản, không cần Specification)
-        List<Product> all = productRepository.findByIsActiveTrue();
+        // ✅ Eager fetch category và images để tránh lazy loading
+        List<Product> all = productRepository.findByIsActiveTrueWithJoin();
 
         List<Product> filtered = all.stream()
             .filter(p -> {
@@ -99,9 +99,15 @@ public class ProductService {
     }
 
     public ProductResponse getProductById(Long id) {
-        Product product = productRepository.findById(id)
+        // ✅ Use eager fetch query to load images for detail view
+        Product product = productRepository.findByIdWithImages(id)
                 .orElseThrow(() -> new RuntimeException("Product không tồn tại!"));
-        return mapToResponse(product);
+        return mapToResponseWithImages(product);
+    }
+
+    // ✅ Get Product entity (không convert to DTO)
+    public Product getProductEntityById(Long id) {
+        return productRepository.findById(id).orElse(null);
     }
 
     public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
@@ -154,17 +160,51 @@ public class ProductService {
     }
 
     private ProductResponse mapToResponse(Product product) {
+        Long categoryId = null;
+        String categoryName = null;
+        if (product.getCategory() != null) {
+            categoryId = product.getCategory().getId();
+            categoryName = product.getCategory().getName();
+        }
+        
+        // ✅ Return empty images để tránh lazy loading exception
         return new ProductResponse(
                 product.getId(), product.getSku(), product.getName(),
                 product.getDescription(), product.getBrand(),
-                product.getCategory().getId(), product.getCategory().getName(),
+                categoryId, categoryName,
                 product.getPrice(), product.getQuantity(), product.getSpecification(),
                 product.getRating(), product.getReviews(), product.getIsActive(),
                 product.getCreatedAt(), product.getUpdatedAt(),
-                product.getImages().stream()
-                        .map(img -> new ProductImageResponse(img.getId(), img.getImageUrl(),
-                                img.getDisplayOrder(), img.getIsPrimary(), img.getCreatedAt()))
-                        .collect(Collectors.toList())
+                List.of()  // ✅ Empty images list để tránh lazy loading
+        );
+    }
+
+    // ✅ Map product with images (for detail view)
+    private ProductResponse mapToResponseWithImages(Product product) {
+        Long categoryId = null;
+        String categoryName = null;
+        if (product.getCategory() != null) {
+            categoryId = product.getCategory().getId();
+            categoryName = product.getCategory().getName();
+        }
+        
+        // ✅ Include images in response (images were eager loaded)
+        List<ProductImageResponse> images = new ArrayList<>();
+        if (product.getImages() != null && !product.getImages().isEmpty()) {
+            images = product.getImages().stream()
+                    .map(img -> new ProductImageResponse(img.getId(), img.getImageUrl(),
+                            img.getDisplayOrder(), img.getIsPrimary(), img.getCreatedAt()))
+                    .collect(Collectors.toList());
+        }
+        
+        return new ProductResponse(
+                product.getId(), product.getSku(), product.getName(),
+                product.getDescription(), product.getBrand(),
+                categoryId, categoryName,
+                product.getPrice(), product.getQuantity(), product.getSpecification(),
+                product.getRating(), product.getReviews(), product.getIsActive(),
+                product.getCreatedAt(), product.getUpdatedAt(),
+                images  // ✅ Include images for detail view
         );
     }
 }
